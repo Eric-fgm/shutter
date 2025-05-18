@@ -1,0 +1,179 @@
+package shutter
+public
+
+	with Data_Model;
+	with Base_Types;
+	with SEI;
+
+-- Data Types --
+	data BlindState
+		properties
+			Data_Model::Enumerators => ("Closed", "Opening", "Opened", "Closing");
+			Data_Model::base_type => (classifier (Base_Types::Integer));
+			Data_Size => 4 Bytes;
+	end BlindState;
+
+	data BlindCommand
+		properties
+			Data_Model::Enumerators => ("Open", "Close", "Stop");
+			Data_Model::base_type => (classifier (Base_Types::Integer));
+			Data_Size => 4 Bytes;
+	end BlindCommand;
+
+	data LightSensorValue
+		properties
+			Data_Model::base_type => (classifier (Base_Types::Unsigned_16));
+			Data_Size => 2 Bytes;
+	end LightSensorValue;
+
+-- Main System --
+	system SmartBlindSystem
+	end SmartBlindSystem;
+
+	system implementation SmartBlindSystem.impl
+		subcomponents
+			controller: process BlindController.impl;
+			motor: device BlindMotor.impl;
+			scheduler: process SensorBasedScheduler.impl;
+			lightSensor: device LightSensor.impl;
+
+			cpu: processor CPU.impl;
+			ram: memory RAM.impl;
+			hwc: bus HWConnection.impl;
+
+		connections
+			-- control logic
+			c1: port controller.command_out -> motor.command_in;
+			c2: port motor.state_out -> controller.state_in;
+
+			-- sensor and scheduler
+			c3: port lightSensor.sensor_out -> scheduler.sensor_input;
+			c4: port scheduler.command_out -> controller.command_in;
+
+			-- buses
+			c5: bus access ram.hwcAccess <-> hwc;
+			c6: bus access cpu.hwcAccess <-> hwc;
+			c7: bus access lightSensor.hwcAccess <-> hwc;
+  			c8: bus access motor.hwcAccess <-> hwc;
+			
+		properties
+			Actual_Processor_Binding => (reference (cpu)) applies to controller, scheduler;
+			Actual_Memory_Binding => (reference (ram)) applies to controller, scheduler;
+			Actual_Connection_Binding => (reference(hwc)) applies to c1, c2, c3, c4, c5, c6, c7, c8;
+			
+	end SmartBlindSystem.impl;
+
+-- Process: Blind Controller --
+	process BlindController
+		features
+			command_out: out data port BlindCommand;
+			command_in: in data port BlindCommand;
+			state_in: in data port BlindState;
+	end BlindController;
+
+	process implementation BlindController.impl
+		subcomponents
+			controlThread: thread ControlThread.impl;
+		connections
+			c1: port command_in -> controlThread.command_in;
+			c2: port controlThread.command_out -> command_out;
+			c3: port state_in -> controlThread.state_in;
+	end BlindController.impl;
+
+-- Process: Sensor-Based Scheduler --
+	process SensorBasedScheduler
+		features
+			sensor_input: in data port LightSensorValue;
+			command_out: out data port BlindCommand;
+	end SensorBasedScheduler;
+
+	process implementation SensorBasedScheduler.impl
+		subcomponents
+			schedulerThread: thread SchedulerThread.impl;
+		connections
+			c1: port sensor_input -> schedulerThread.sensor_data;
+			c2: port schedulerThread.command_out -> command_out;
+	end SensorBasedScheduler.impl;
+
+-- Devices --
+	device BlindMotor
+		features
+			command_in: in data port BlindCommand;
+			state_out: out data port BlindState;
+			hwcAccess: requires bus access HWConnection;
+		properties
+			Period => 50ms;
+			Dispatch_Protocol => Periodic;
+	end BlindMotor;
+
+	device implementation BlindMotor.impl
+	end BlindMotor.impl;
+
+	device LightSensor
+		features
+			sensor_out: out data port LightSensorValue;
+			hwcAccess: requires bus access HWConnection;
+		properties
+			Period => 100ms;
+			Dispatch_Protocol => Periodic;
+	end LightSensor;
+
+	device implementation LightSensor.impl
+	end LightSensor.impl;
+
+-- Threads --
+	thread ControlThread
+		features
+			command_in: in data port BlindCommand;
+			command_out: out data port BlindCommand;
+			state_in: in data port BlindState;
+		properties
+			SEI::MIPSBudget => 10.0 MIPS;
+	end ControlThread;
+
+	thread implementation ControlThread.impl
+	end ControlThread.impl;
+
+	thread SchedulerThread
+		features
+			sensor_data: in data port LightSensorValue;
+			command_out: out data port BlindCommand;
+		properties
+			SEI::MIPSBudget => 10.0 MIPS;
+	end SchedulerThread;
+
+	thread implementation SchedulerThread.impl
+	end SchedulerThread.impl;
+
+-- CPU, Memory and bus --
+	processor CPU
+		features
+			hwcAccess: requires bus access HWConnection;
+		properties
+			SEI::MIPSCapacity => 120.0 MIPS;
+			SEI::GrossWeight => 0.05kg;
+	end CPU;
+
+	processor implementation CPU.impl
+	end CPU.impl;
+
+	memory RAM
+		features
+			hwcAccess: requires bus access HWConnection;
+		properties
+			SEI::GrossWeight => 0.025kg;
+	end RAM;
+
+	memory implementation RAM.impl
+	end RAM.impl;
+
+	bus HWConnection
+		properties
+			SEI::BandWidthCapacity => 1000.0 Mbps;
+			SEI::GrossWeight => 0.1kg;
+	end HWConnection;
+
+	bus implementation HWConnection.impl
+	end HWConnection.impl;
+
+end shutter;
