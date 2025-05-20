@@ -1,0 +1,43 @@
+package customHardware
+public
+	with SEI;
+	
+	processor CPU
+		features
+			hwcAccess: requires bus access HWConnection;
+		properties
+			SEI::MIPSCapacity => 120.0 MIPS;
+			SEI::GrossWeight => 0.05kg;
+	end CPU;
+
+	processor implementation CPU.impl
+	end CPU.impl;
+
+	memory RAM
+		features
+			hwcAccess: requires bus access HWConnection;
+		properties
+			SEI::GrossWeight => 0.025kg;
+	end RAM;
+
+	memory implementation RAM.impl
+	end RAM.impl;
+
+	bus HWConnection
+		properties
+			SEI::BandWidthCapacity => 1000.0 Mbps;
+			SEI::GrossWeight => 0.1kg;
+	end HWConnection;
+
+	bus implementation HWConnection.impl
+	end HWConnection.impl;
+	
+	virtual bus Bluetooth
+		properties
+			SEI::BandWidthCapacity => 2.0 Mbps;
+	end Bluetooth;
+
+	virtual bus implementation Bluetooth.impl
+	end Bluetooth.impl;
+	
+end customHardware;

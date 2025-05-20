@@ -1,0 +1,98 @@
+package remoteControl
+public
+	with customTypes;
+	with customHardware;
+	
+-- Main System --
+	system RemoteControlSystem
+		features
+			command_out: out data port customTypes::BlindCommand;
+			btc_access: requires virtual bus access customHardware::Bluetooth;
+	end RemoteControlSystem;
+
+	system implementation RemoteControlSystem.impl
+		subcomponents
+			controller: process Controller;
+			buttons: device Buttons;
+			bluetooth: device BluetoothDevice;
+			
+			cpu: processor customHardware::CPU.impl;
+			ram: memory customHardware::RAM.impl;
+			hwc: bus customHardware::HWConnection.impl;
+
+		connections
+			c1: port bluetooth.command_out -> command_out;
+			c2: port controller.command_out -> bluetooth.command_in;
+
+			-- buttons
+			c3: port buttons.button_pressed -> controller.button_pressed;
+
+			-- buses
+			c4: bus access ram.hwcAccess <-> hwc;
+			c5: bus access cpu.hwcAccess <-> hwc;
+			c6: bus access buttons.hwc_access <-> hwc;
+			c7: bus access bluetooth.hwc_access <-> hwc;
+			c8: virtual bus access bluetooth.btc_access <-> btc_access;
+			
+		properties
+			Actual_Processor_Binding => (reference (cpu)) applies to controller;
+			Actual_Memory_Binding => (reference (ram)) applies to controller;
+			Actual_Connection_Binding => (reference(hwc)) applies to c2, c3, c4, c5, c6, c7;
+			
+	end RemoteControlSystem.impl;
+	
+	process Controller
+		features
+			command_out: out data port customTypes::BlindCommand;
+			button_pressed: in data port customTypes::ButtonCommand;
+	end Controller;
+
+	process implementation Controller.impl
+		subcomponents
+			buttonsThread: thread ButtonsThread.impl;
+		connections
+			c1: port ButtonsThread.command_out -> command_out;
+			c2: port button_pressed -> buttonsThread.button_pressed;
+	end Controller.impl;
+
+-- Threads --
+	thread ButtonsThread
+		features
+			button_pressed: in data port customTypes::ButtonCommand;
+			command_out: out data port customTypes::BlindCommand;
+    	properties
+			Dispatch_Offset => 2ms;
+		    Deadline => 30ms;	
+		    Period => 50ms;
+		    Compute_Execution_Time => 0ms..4ms;	
+	end ButtonsThread;
+
+	thread implementation ButtonsThread.impl
+	end ButtonsThread.impl;
+	
+
+-- Devices --
+	device Buttons
+		features
+			button_pressed: out data port customTypes::ButtonCommand;
+			hwc_access: requires bus access customHardware::HWConnection;
+		properties
+			Period => 50ms;
+			Dispatch_Protocol => Periodic;
+	end Buttons;
+
+	device implementation Buttons.impl
+	end Buttons.impl;
+	
+	device BluetoothDevice
+		features
+			command_in: in data port customTypes::BlindCommand;
+			command_out: out data port customTypes::BlindCommand;
+        	btc_access: requires virtual bus access customHardware::Bluetooth;
+        	hwc_access: requires bus access customHardware::HWConnection;
+	end BluetoothDevice;
+
+	device implementation BluetoothDevice.impl
+	end BluetoothDevice.impl;
+	
+end remoteControl;

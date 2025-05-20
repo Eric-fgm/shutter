@@ -1,0 +1,33 @@
+package customTypes
+public
+	with Data_Model;
+	with Base_Types;
+	
+	data BlindState
+		properties
+			Data_Model::Enumerators => ("Closed", "Opening", "Opened", "Closing");
+			Data_Model::base_type => (classifier (Base_Types::Integer));
+			Data_Size => 4 Bytes;
+	end BlindState;
+
+	data BlindCommand
+		properties
+			Data_Model::Enumerators => ("Open", "Close", "Stop");
+			Data_Model::base_type => (classifier (Base_Types::Integer));
+			Data_Size => 4 Bytes;
+	end BlindCommand;
+	
+	data ButtonCommand
+		properties
+			Data_Model::Enumerators => ("Up", "Down", "Stop");
+			Data_Model::base_type => (classifier (Base_Types::Integer));
+			Data_Size => 4 Bytes;
+	end ButtonCommand;
+
+	data LightSensorValue
+		properties
+			Data_Model::base_type => (classifier (Base_Types::Unsigned_16));
+			Data_Size => 2 Bytes;
+	end LightSensorValue;
+	
+end customTypes;
