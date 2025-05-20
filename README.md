@@ -33,7 +33,7 @@ Użytkownik może spodziewać się automatycznego dostosowania położenia rolet
 
 ## Model - rysunek
 
-![diagram](images/diagram.png)
+![diagram](images/image.png)
 
 ---
 
