@@ -12,9 +12,9 @@ public
 
 	system implementation RemoteControlSystem.impl
 		subcomponents
-			controller: process Controller;
-			buttons: device Buttons;
-			bluetooth: device BluetoothDevice;
+			controller: process Controller.impl;
+			buttons: device Buttons.impl;
+			bluetooth: device BluetoothDevice.impl;
 			
 			cpu: processor customHardware::CPU.impl;
 			ram: memory customHardware::RAM.impl;
@@ -36,6 +36,7 @@ public
 			
 		properties
 			Actual_Processor_Binding => (reference (cpu)) applies to controller;
+			Actual_Processor_Binding => (reference (cpu)) applies to controller.buttonsThread;
 			Actual_Memory_Binding => (reference (ram)) applies to controller;
 			Actual_Connection_Binding => (reference(hwc)) applies to c2, c3, c4, c5, c6, c7;
 			

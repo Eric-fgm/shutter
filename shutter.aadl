@@ -11,12 +11,12 @@ public
 
 	system implementation SmartBlindSystem.impl
 		subcomponents
-			controller: process BlindController.impl;
+			controller: process Controller.impl;
 			motor: device BlindMotor.impl;
 			scheduler: process SensorBasedScheduler.impl;
 			lightSensor: device LightSensor.impl;
 			remoteControl: system remoteControl::RemoteControlSystem.impl;
-			bluetooth: device BluetoothDevice;
+			bluetooth: device BluetoothDevice.impl;
 
 			cpu: processor customHardware::CPU.impl;
 			ram: memory customHardware::RAM.impl;
@@ -45,22 +45,24 @@ public
 			
 		properties
 			Actual_Processor_Binding => (reference (cpu)) applies to controller, scheduler;
+			Actual_Processor_Binding => (reference (cpu)) applies to controller.controlThread, scheduler.schedulerThread;
+			
 			Actual_Memory_Binding => (reference (ram)) applies to controller, scheduler;
 			Actual_Connection_Binding => (reference(hwc)) applies to c1, c2, c3, c4, c6, c7, c8, c9, c10;
 			Actual_Connection_Binding => (reference(btc)) applies to c11, c12, c13;
 			
 	end SmartBlindSystem.impl;
 
--- Process: Blind Controller --
-	process BlindController
+-- Process: Controller --
+	process Controller
 		features
 			command_out: out data port customTypes::BlindCommand;
 			command_in: in data port customTypes::BlindCommand;
 			remote_command_in: in data port customTypes::BlindCommand;
 			state_in: in data port customTypes::BlindState;
-	end BlindController;
+	end Controller;
 
-	process implementation BlindController.impl
+	process implementation Controller.impl
 		subcomponents
 			controlThread: thread ControlThread.impl;
 		connections
@@ -68,7 +70,7 @@ public
 			c2: port controlThread.command_out -> command_out;
 			c3: port state_in -> controlThread.state_in;
 			c4: port remote_command_in -> controlThread.remote_command_in;
-	end BlindController.impl;
+	end Controller.impl;
 
 -- Process: Sensor-Based Scheduler --
 	process SensorBasedScheduler

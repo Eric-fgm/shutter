@@ -5,12 +5,12 @@ public
 	processor CPU
 		features
 			hwcAccess: requires bus access HWConnection;
-		properties
-			SEI::MIPSCapacity => 120.0 MIPS;
-			SEI::GrossWeight => 0.05kg;
 	end CPU;
 
 	processor implementation CPU.impl
+		properties
+			SEI::MIPSCapacity => 120.0 MIPS;
+			SEI::GrossWeight => 0.05kg;
 	end CPU.impl;
 
 	memory RAM
